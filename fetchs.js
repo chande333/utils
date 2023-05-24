@@ -1,11 +1,14 @@
 test_url = "http://localhost/knowledge-base/libraries/apis/opsapi.php";
 
-fetch(test_url, {
+    let params = {
+        "fn": "ping"
+    }
+
+    fetch(test_url, {
         "headers": {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9"
+            "accept": "*/*"
         },
-        "body": `{"fn":"ping", "var1": "${document.getElementById("test").value}"}`,
+        "body": `${JSON.stringify(params)}`,
         "method": "POST"
     }).then(response => response.text())
     .then(data => {
