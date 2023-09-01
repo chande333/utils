@@ -45,7 +45,8 @@ segmentAlgebra = {
 	]
 }
 
-var formattedString = JSON.stringify(segmentAlgebra, null, "\t");
-        formattedString = formattedString.replace(/\n\t.*({|})/g,"");
+        var formattedString = JSON.stringify(segmentAlgebra, null, "\t");
+        formattedString = formattedString.replace(/\n\t\t*([{}])/g, "");
         formattedString = formattedString.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\n/g, "<br>");
         formattedString = formattedString.replaceAll('\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},',"");
+        formattedString = formattedString.replaceAll('"audienceSegmentId":',"");
