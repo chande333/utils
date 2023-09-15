@@ -1,0 +1,677 @@
+//Set of specific functions create by a.benavides@criteo.com
+window.ABSUtils = (function(){
+
+    function createDiv(id = false,innerText = false,type= "div",style = false,thisClass = false,thisValue = false){
+
+        let newDiv = document.createElement(type);
+        if (id){newDiv.id = id;};
+        if (style != false){newDiv.style = style;}
+        if (innerText != false){newDiv.innerText = innerText}
+        if (thisClass != false){newDiv.className = thisClass}
+        if (thisValue != false){newDiv.value = thisValue}
+
+
+        return newDiv;
+    }
+
+    function loadCSS(location,id,withTimestamp = true,callbackFn){
+        if (!!document.getElementById("css_" + id))
+        {return;}
+
+        let timestamp = "";
+
+        if (withTimestamp){
+            let time = Date.now();
+            timestamp =  "?_=" + time;
+        }
+
+        var newCSS = document.createElement('link');
+        newCSS.rel = 'stylesheet';
+        newCSS.type = 'text/css';
+        newCSS.id = "css_" + id;
+        newCSS.href = `${location}${timestamp}`;
+        document.head.appendChild(newCSS);
+
+        if(callbackFn){callbackFn();}
+    }
+
+    function loadThisTool(location, thisID, withTimestamp = true, callbackFn) {
+        console.log("TS Tools loading --> " + thisID);
+  
+        if (document.getElementById("js_lib_" + thisID)) {
+            return;
+        }
+
+        let timestamp = withTimestamp ? "?_=" + Date.now() : "";
+        let jslib = document.createElement("script");
+        jslib.id = "js_lib_" + thisID;
+        jslib.type = "text/javascript";
+        jslib.src = location + timestamp;
+
+        jslib.onerror = function () {
+            // If the JS file is not found, sends a warning in the tool title
+            document.querySelector("#tsapp_tool_title").innerText = "Error Loading " + thisID;
+            isThereLoadingError = true;
+        }
+
+        document.head.appendChild(jslib);
+
+        if (callbackFn) {
+            document.getElementById("js_lib_" + thisID).onload = function () {
+                console.log("Load -->" + thisID);
+                callbackFn();
+            }
+        }
+    }
+
+
+    function sortOBJbyPROPandDIRECTION(obj){ 
+     
+        if (typeof obj == "string" && obj == "help") {
+            console.log("({list:listarray, property:prop, direction:ASC/DESC})");
+        }
+        // new_sortOBJbyPROPandDIRECTION ({"list":"", "property":"", "direction":"DESC"})
+        if (obj.direction == "DESC") {var dir = 1} else {var dir = -1;}
+    
+        if (typeof obj.list[0][obj.property] == "number" || obj.isNum == true ) {
+            var number = 1;
+        }
+        if (number == 1) {
+            obj.list.sort(function new_compareComponent(a,b){
+
+                let num1 = parseFloat(a[obj.property]);
+                let num2 = parseFloat(b[obj.property]);
+
+            if (num1 < num2)
+                return dir;
+              if (num1 > num2)
+                return (-1)*dir;
+            });
+        }
+        else{
+            obj.list.sort(function new_compareComponent(a,b){
+                if (a[obj.property].toLowerCase() < b[obj.property].toLowerCase())
+                    return dir;
+                  if (a[obj.property].toLowerCase() > b[obj.property].toLowerCase())
+                    return (-1)*dir;
+            });
+        }
+         return obj.list
+    }
+
+    function sortOBJbyOutputArray(obj){ 
+     
+        if (typeof obj == "string" && obj == "help") {
+            console.log("({list:listarray, property:prop, direction:ASC/DESC})");
+        }
+
+        var unsortedArray = [];
+        var isObject = false;
+
+        if (Array.isArray(obj.list) == false && typeof obj.list == 'object'){
+            isObject = true;
+            let theKeys = Object.keys(obj.list);
+
+            theKeys.forEach(thisKey=>{
+                obj.list[thisKey].focusKey = thisKey;
+                unsortedArray.push(obj.list[thisKey]);
+            })
+        }
+        else if(!!Array.isArray(obj.list)){
+            unsortedArray = obj.list;
+        }
+
+
+
+        // new_sortOBJbyPROPandDIRECTION ({"list":"", "property":"", "direction":"DESC"})
+        if (obj.direction == "DESC") {var dir = 1} else {var dir = -1;}
+    
+        if (typeof unsortedArray[0][obj.property] == "number" || obj.isNum == true ) {
+            var number = 1;
+        }
+        if (number == 1) {
+            unsortedArray.sort(function new_compareComponent(a,b){
+
+                let num1 = parseFloat(a[obj.property]);
+                let num2 = parseFloat(b[obj.property]);
+
+            if (num1 < num2)
+                return dir;
+              if (num1 > num2)
+                return (-1)*dir;
+            });
+        }
+        else{
+            unsortedArray.sort(function new_compareComponent(a,b){
+                if (a[obj.property].toLowerCase() < b[obj.property].toLowerCase())
+                    return dir;
+                  if (a[obj.property].toLowerCase() > b[obj.property].toLowerCase())
+                    return (-1)*dir;
+            });
+        }
+
+        // if (isObject){
+
+            let outArr = [];
+            unsortedArray.forEach(thisA=>{
+                outArr.push(thisA[obj.keyToExtract]);
+            });
+            return outArr;
+
+        // }
+        // else{
+            // return unsortedArray
+        // }
+    }
+
+    function updateUrlParams(focusSectionId) {
+        let whpsIsSupported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/(iPod|iPhone|iPad|WebApps\/.+CFNetwork)/);
+
+        let url1 = location.href.split("sec")[0];
+        url1 = !url1.match(/\?/)  ? url1 + "?" : url1;
+        console.log(url1);
+        let newUrl = `${url1}sec=${focusSectionId}`;
+        if (whpsIsSupported) window.history.pushState({}, '', newUrl);
+
+    }
+
+    function decodeThis(text,decode,lineBreakFilter = false){
+
+        text = decode == true ? decodeURIComponent(text) : text;
+
+        var replaceLinks = [];
+        
+        //text = text.replace(/\n/g, "<br/>");
+
+        //If HYperlink is detected ----------------------------
+
+        if(!!text.match(/\[.*?\]/) == true){ 
+          
+            var thisText = text.match(/\[.*?\]/g);
+
+            thisText.forEach(function(bb){
+                //console.log(bb)
+                var cc = bb.replace(/(\[|\])/g,"");
+                var xx = cc.split("|");
+                var ww = `<a href=\"${xx[1]}\" target='_blank'>${xx[0]}</a>`;
+                
+                replaceLinks.push({"original": bb, "withlink": ww});
+            });
+
+            replaceLinks.forEach(function(repl){
+				text = text.replace(repl.original,repl.withlink);
+			  });
+
+            
+          }
+
+          // -----------------------------------------------------
+          // -----------------------------------------------------
+          
+          
+          
+          if(!!text.match(/(;|h(\d)\.)|(!(I|i)nfo!)|(!(A|a)lert!)/)) {
+			// var breaks = text.split(";");
+            var breaks = text.split(/(\n)/);
+			var b = ""
+
+			var returnText = breaks.map(function(a){
+	
+				// var thisout = ";";
+				var classy = "dummy";
+
+
+
+				// if (a.match(/:.*?:/)) { ADD CUSTOM CLASSES if there are :high_red:
+				// 	var classy = a.match(/:.*?:/)[0].replace(/:/g,""); // takes high_red from :high_red:
+				// 	//var conNum = a.split(":").length - 1;
+
+					
+
+				// 	if (a.match(/\*/)) {
+				// 		a ="*" + a.split(/:.*?:/)[1];
+				// 	}
+				// 	else{
+				// 		a = a.split(/:.*?:/)[1];
+				// 	}
+
+				// 	var bbbbb = a.replace("span:high_red","span class='high_red'");
+				// }
+
+				//a = a.replace("span:high_red","span class='high_red'");
+
+
+
+				switch(true){
+                    case !!a.match(/!(A|a)lert!/): b = "<div class='alert alert-danger m-0 p-1' role='alert'>" + a.replace(/!(A|a)lert!/,"").trim() + "</div>";  break;
+                    case !!a.match(/!(I|i)nfo!/): b = "<div class='alert alert-primary m-0 p-1' role='alert'>" + a.replace(/!(I|i)nfo!/,"").trim() + "</div>";  break;
+					// case !!a.match(/!Alert!/): b = a.replace("/!Alert!/","<div class='alert alert-danger' role='alert'>!Alert!</div>").trim() + "</h1>";  break;
+                    case !!a.match(/h1/): b = "<h1>" + a.replace("h1.","").trim() + "</h1>";  break;
+                    case !!a.match(/h2/): b = "<h2>" + a.replace("h2.","").trim() + "</h2>";  break;
+                    case !!a.match(/h3/): b = "<h3>" + a.replace("h3.","").trim() + "</h3>";  break;
+                    case !!a.match(/h4/): b = "<h4>" + a.replace("h4.","").trim() + "</h4>";  break;
+                    case !!a.match(/h5/): b = "<h5>" + a.replace("h5.","").trim() + "</h5>";  break;
+                    // case !!a.match("\n"): b = a.replace("\n","<br>");  break;
+					// case !!a.match(/\*.*/g): b = "<li class='" + classy + "'>" + a.replace("*","").trim() + "</li>"; break;
+					case (classy!= "dummy"): b = "<span class='" + classy + "'>" + a.replace("*","").trim() + "</span>"; break;
+
+					default: b = "<div>" + a + "</div>";
+				}
+
+				if (a.match("span:")) {
+					console.log(a);
+					console.log(b);
+				}
+	
+				return b;
+	
+			});
+
+		returnText = returnText.join("");
+
+		}
+
+		else{
+			var returnText = text;
+
+		}
+        
+        if (lineBreakFilter){
+            returnText = returnText.replace(/\n/g, "<br/>");
+        }
+        
+        return returnText;
+          
+    }
+
+    function milisecondsToHandM(x){
+
+        var d = moment.duration(x, 'milliseconds');
+        var hours = Math.floor(d.asHours());
+        var mins = Math.floor(d.asMinutes()) - hours * 60;
+        return hours + "h " + mins + "m";
+    }
+
+    function secondsToHandM(x){
+
+        var d = moment.duration(x, 'seconds');
+        var hours = Math.floor(d.asHours());
+        var mins = Math.floor(d.asMinutes()) - hours * 60;
+        return hours + "h " + mins + "m";
+    }
+
+
+    function twoDigits(a){ // Replaces 1 to 01, 2 to 02, etc...
+        if (a < 10) {var b = "0"  + a;}
+        else {var b = a;}
+        return b;
+    }
+
+    function getUrlVars(varName = ""){ 
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=?([^&]*)/gi,function(m,key,value){ vars[key] = value; });
+        if (window.location.href.indexOf("file:///") != -1) {vars.localfile = true;}
+        if (!!varName){
+            return !!vars[varName] ? vars[varName] : false;
+        }else{
+            return vars;
+        }
+        
+    }
+
+    function displaySection(clickedButton,id){
+
+
+
+        let sectionToDisplay = clickedButton ? clickedButton.getAttribute("data-value") : id;
+
+
+        document.querySelectorAll("section").forEach(thisSec=>{
+            thisSec.id == sectionToDisplay ? thisSec.style.display = "block" : thisSec.style.display = "none";
+        });
+
+        document.querySelectorAll("#buttons_menu button").forEach(thisBut=>{
+            let value = thisBut.getAttribute("data-value");
+            thisBut.style.backgroundColor = value == sectionToDisplay ? "blue" : "";
+            thisBut.style.color = value == sectionToDisplay ? "white" : "#0d6efd";
+        });
+
+
+
+
+    }
+
+
+
+
+    function topMenuSelector(obj){
+       
+    
+         var rooURL = location.origin + location.pathname;
+    
+  
+    
+        const ROOT_URL = rooURL;
+    
+        // console.log(ROOT_URL);
+    
+    
+        var target = obj.v;
+        var tops = document.getElementById("tops").children;
+        var titleStyles = [];
+        var top_tabs_menu = document.getElementById("top_tabs_menu").children;
+        var size = top_tabs_menu.length;
+    
+        if (obj.v == 0) { //If this is initial state
+            var target = top_tabs_menu[0].id;
+            var indexSel = 0;
+            var backStyle = top_tabs_menu[0].getAttribute("data-back");
+        }
+    
+        else if(obj.v.length == 1){ // TO BE REMOVED, in case it is a number
+            target = parseInt(obj.v);
+            var out = false;
+    
+            for (var i = 0; i < size; i++) {
+                if (i == target) {
+                    var indexSel = i;
+                    target = top_tabs_menu[i].id;
+                    var backStyle = top_tabs_menu[i].getAttribute("data-back");
+                    out = true;
+                    break;
+                }
+            }
+    
+            if (out == false) { //if for some strange reason it is another number
+                var indexSel = 0;
+                target = top_tabs_menu[0].id;
+                var backStyle = top_tabs_menu[0].getAttribute("data-back");
+            }
+        }
+        else{
+            for (var i = 0; i < size; i++) {
+                if (top_tabs_menu[i].id == target) {
+                    var indexSel = i;
+                    var backStyle = top_tabs_menu[i].getAttribute("data-back");
+                    var backColor = top_tabs_menu[i].getAttribute("data-color");
+                    break;
+                }
+            }
+        }
+    
+        hidesChildrenShowsOne(tops,tops.length,indexSel);
+        //changesChildrenColor(top_tabs_menu,top_tabs_menu.length,indexSel,"#E6E6E6","rgb(176, 173, 173)");
+        changesChildrenColor({array:top_tabs_menu, index: indexSel });
+    
+        
+        globalSelectedTab = target.replace(/_/g," ");
+    
+        if(!!globalArr.dayDetail){
+            let todaysData = globalArr.dayDetail[moment().format("YYYY_MM_DD")];
+            header_title.innerText = `${globalSelectedTab} (${todaysData == null ? 0 : todaysData.length})`;
+        }
+        else{
+            document.getElementById("header_title").innerHTML = globalSelectedTab;
+        }
+    
+        
+        document.getElementById("header_title_back").style.backgroundImage = `url('${ROOT_URL}Assets/${backStyle}.png')`;
+        document.getElementById("header_title_pre_back").style.backgroundColor = backColor;
+    
+    
+    
+        if (obj.initial) { // Applies only if it comes from INIT() function
+            changeBrowserUrl({"property": "topMenuSelector", "value": target});
+        }
+        else{
+            changeBrowserUrl({"cleanTopMenu" : target});
+        }
+    
+    
+    
+        switch (true){ //Custom function to initiate 
+            case (!!target.toLowerCase().match("salesforce")): populateSalesForce();
+            default: 
+        }
+    }
+
+    function hidesChildrenShowsOne(list,listLenght,indexToShow){//007 
+
+        for (var i = 0; i < listLenght; i++) { 
+            if (i == indexToShow) {list[indexToShow].style.display = "block";}
+            else{list[i].style.display = "none";}		
+        }
+    }
+
+    function changesChildrenColor(obj){ //004 
+        // {array: list, index: indexClicked}
+    
+        var listLenght = obj.array.length;
+        var list = obj.array; 
+    
+        for (var i = 0; i < listLenght; i++) { 
+            if (i == obj.index) {list[i].setAttribute("class", "selTopMenu");}
+            else{list[i].setAttribute("class", "stndTopMenu")}
+            
+        }
+    }
+
+    var whpsIsSupported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/(iPod|iPhone|iPad|WebApps\/.+CFNetwork)/);
+
+    function changeBrowserUrl(obj) { // {"property": "topMenuSelector", "value": indexSel}
+
+        // console.log(urlVards);
+
+        if (obj.cleanTopMenu != null) {
+            var type = urlVards.type != null ? "&type=" + urlVards.type : "";
+            var url = "?topMenuSelector=" + obj.cleanTopMenu + type;
+            urlVards = {
+                "topMenuSelector": obj.cleanTopMenu
+            }; // Cleans URL VARS
+            if (type != "") {
+                urlVards.type = type.split("=")[1]
+            }
+        } else {
+
+            var k = Object.keys(urlVards); // Gets all properties from the URL Vars
+
+            // Checks if the property that needs to be modified has already been declared
+            // To Avoid duplication e.g. ?type=admin&type=admin
+            var ix = k.indexOf(obj.property);
+            urlVards[obj.property] = obj.value;
+
+            if (ix == -1) {
+                k.push(obj.property)
+            }
+
+
+            var appendUrl = [];
+
+            k.forEach(function (a, i) {
+                var prop = k[i];
+                if (i == 0) {
+                    appendUrl.push("?" + prop + "=" + urlVards[prop]);
+                } else {
+                    appendUrl.push("&" + prop + "=" + urlVards[prop]);
+                }
+            })
+
+            var url = appendUrl.join("");
+
+            globalArr.appendUrl = appendUrl;
+        }
+
+        if (whpsIsSupported) window.history.pushState({}, '', url);
+
+    }
+
+
+    
+function filtersObjArrayProperties(objectArray,arrayProperty){ 
+	// [Description: you can choose all the properties you want to extract from an array of objects, e.g. arrayProperty = ["name","id"] ]
+
+	var newArr = [];
+
+	objectArray.forEach(function(b){
+		var newObj = {};
+		arrayProperty.forEach(function(a) {newObj[a] = b[a];})
+		newArr.push(newObj);
+	});
+
+	return newArr;
+}
+
+function objVarToArray(objectArray, property, removeDuplicates, sortDir) { // 008 [Description: Searches through the Array of Objects for a property, Returns an array with all of them ] (objArray,"prop",true/false,"asc/desc") objectVarUniqueSortedToArray
+    var a = [];
+    var b = objectArray.length;
+    for (var i = 0; i < b; i++) {
+        if (objectArray[i][property] != "") {
+            a.push(objectArray[i][property]);
+        }
+    }
+
+
+    if (removeDuplicates == true) {
+        a = removeArrayDuplicates(a);
+    };
+
+    if (sortDir) {
+        sortDir = sortDir.toLowerCase();
+
+
+        switch (sortDir) {
+            case "asc":
+                return a.sort();
+                break;
+            case "desc":
+                return a.reverse();
+                break;
+            default:
+                return a;
+                break;
+        }
+
+    }
+    else{
+        return a;
+    }
+
+}
+    
+function removeArrayDuplicates(array,sorting){
+
+	array = array.filter(function(item, pos) {
+		return array.indexOf(item) == pos;
+	});
+
+	if (sorting = true) {array.sort();}
+
+	return array;
+}
+
+function numberWithCommas(x,y) {
+	 
+	// console.log(y != null);
+
+	if (y != null) {
+		var w = parseFloat(x);
+		var a = w.toFixed(parseInt(y));
+		//console.log(a);
+	}
+	else{
+		var a = x;
+	}
+
+	var outp = a.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return outp;
+}
+
+
+function copyToClipboard(text) { // reference https://stackoverflow.com/questions/33855641/copy-output-of-a-javascript-variable-to-the-clipboard
+    var dummy = document.createElement("textarea");
+    // to avoid breaking orgain page when copying more words
+    // cant copy when adding below this code
+    // dummy.style.display = 'none'
+    document.body.appendChild(dummy);
+    //Be careful if you use texarea. setAttribute('value', value), which works with "input" does not work with "textarea". – Eduard
+    dummy.value = text;
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
+}
+
+
+// JavaScript
+function updateSelect2Value(selectId, newValue) {
+    // Step 1: Change the value of the original select element
+    $('#' + selectId).val(newValue);
+    
+    // Step 2: Trigger the change event on the select element
+    $('#' + selectId).trigger('change');
+    
+    // Step 3: Destroy the existing Select2 instance
+    $('#' + selectId).select2('destroy');
+    
+    // Step 4: Reinitialize the Select2 with the updated value
+    $('#' + selectId).select2();
+  }
+  
+  // Example usage:
+
+  function removePluralS(inputString) {
+    const words = inputString.split(' '); // Split the input string into words
+    const result = [];
+
+    words.forEach(word => {
+        if (word.endsWith('s')) {
+            result.push(word.slice(0, -1)); // Remove the last character
+        } else {
+            result.push(word);
+        }
+    });
+
+    return result.join(' '); // Convert the modified words back to a string
+}
+
+function capitalizeFirstWord(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+  
+
+function handleVar(value) {
+    if (value === null || value === undefined) {
+        return "";
+    } else {
+        return value;
+    }
+}
+
+
+
+   
+    return{
+        loadThisTool:loadThisTool,
+        loadCSS:loadCSS,
+        handleVar:handleVar,
+        capitalizeFirstWord:capitalizeFirstWord,
+        createDiv:createDiv,
+        displaySection:displaySection,
+        sortOBJbyPROPandDIRECTION:sortOBJbyPROPandDIRECTION,
+        sortOBJbyOutputArray:sortOBJbyOutputArray,
+        updateUrlParams:updateUrlParams,
+        decodeThis:decodeThis,
+        milisecondsToHandM:milisecondsToHandM,
+        secondsToHandM:secondsToHandM,
+        twoDigits:twoDigits,
+        getUrlVars:getUrlVars,
+        topMenuSelector:topMenuSelector,
+        filtersObjArrayProperties:filtersObjArrayProperties,
+        objVarToArray:objVarToArray,
+        numberWithCommas:numberWithCommas,
+        copyToClipboard:copyToClipboard,
+        updateSelect2Value:updateSelect2Value,
+        removePluralS:removePluralS
+    }
+
+})();
+
