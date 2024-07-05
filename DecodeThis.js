@@ -1,4 +1,4 @@
-// Version 2024-07-05_2
+// Version 2024-07-05_3
 window.DecodeThis = (function (){
 
     function decodeThis(text,additionalDecode = false){
@@ -114,6 +114,12 @@ window.DecodeThis = (function (){
 			var returnText = text;
 
 		}
+
+        if (!!returnText.match(/\*(.*?)\*/g)){
+            const regex = /\*(.*?)\*/g;
+            returnText = returnText.replaceAll(regex, (match, p1) => `<b>${p1}</b>`);
+        }
+
 
 		returnText = returnText.replace(/\n/g,"<br>")
 
