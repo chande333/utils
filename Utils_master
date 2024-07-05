@@ -175,6 +175,7 @@ window.ABSUtils = (function(){
 
     }
 
+	// For styles, use DecodeThis.js 
     function decodeThis(text,decode,lineBreakFilter = false){
 
         text = decode == true ? decodeURIComponent(text) : text;
