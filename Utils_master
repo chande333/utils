@@ -1,4 +1,4 @@
-//Set of specific functions create by a.benavides@criteo.com
+// Version 2024-07-05
 window.ABSUtils = (function(){
 
     function createDiv(id = false,innerText = false,type= "div",style = false,thisClass = false,thisValue = false){
