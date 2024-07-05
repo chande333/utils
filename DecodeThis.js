@@ -1,14 +1,11 @@
-// Version 2024-07-05
+// Version 2024-07-05_2
 window.DecodeThis = (function (){
 
-    function decodeThis(text){
-
-		
-		// if (text.match("Cruelest")) {
-		// 	console.log(text);
-		// }
+    function decodeThis(text,additionalDecode = false){
 
         var replaceLinks = [];
+        
+        text = additionalDecode ? decodeURIComponent(text) : text;
 
         if(!!text.match(/\[.*?\]/) == true){ //If HYperlink is detected
 
@@ -29,34 +26,34 @@ window.DecodeThis = (function (){
 			  });
 
             
-          }
+        }
 
+        // Adding class to <span>
 		if (text.match(/span:.*?>/g)) {
-				var amount = text.match(/span:.*?>/g).length;
-				for (var i = 0; i < amount; i++) {
-					//console.log(i + " ---->" + text);
-					var spanClass = text.match(/<span:(.*?)>/)[1];
-					text = text.replace(/<span:.*?>/,"<span class='" + spanClass + "'>");
-					//console.log(text);
-				}
-					
-				}
+            var amount = text.match(/span:.*?>/g).length;
+            for (var i = 0; i < amount; i++) {
+                //console.log(i + " ---->" + text);
+                var spanClass = text.match(/<span:(.*?)>/)[1];
+                text = text.replace(/<span:.*?>/,"<span class='" + spanClass + "'>");
+                //console.log(text);
+            }					
+		}
 		
 
-		//text.replace(/\n/,"<br>");
 
+        // Adding class between ::  :: 
+        // ------ ----- -------
         if (!!text.match(/::.*?::.*?::/)) {
             text = text.replace(/::(.*?)::/g, function(match, thisClass) {
-              return `<span class='${thisClass}'>`;
+            return `<span class='${thisClass}'>`;
             });
             text = text.replace(/::/g, "</span>");
-          }
-          
-        // if (!!text.match(/::.*?::.*?::/)) {
-        //     var thisClass = text.match(/::(.*?)::/)[1];
-        //     text = text.replace(/::(.*?)::/,`<span class='${thisClass}'>`);
-        //     text = text.replace(/::/,"</span>");
-        // }
+        }
+
+
+        // * :img: replacer
+        // * Add classes between : : (e.g. high_red from :high_red:)
+        // * Adds h1, h2, h3 
 
 		if(!!text.match(";")) {
 			var breaks = text.split(";");
@@ -73,12 +70,8 @@ window.DecodeThis = (function (){
 					a = a.replace(/:img:.*/,`<img src='${imgUrl}' style="max-height:200px">`);
 				}
 
-
 				else if (a.match(/:.*?:/)) {
-					var classy = a.match(/:.*?:/)[0].replace(/:/g,""); // takes high_red from :high_red:
-					//var conNum = a.split(":").length - 1;
-
-					
+					var classy = a.match(/:.*?:/)[0].replace(/:/g,""); // takes high_red from :high_red:					
 
 					if (a.match(/\*/)) {
 						a ="*" + a.split(/:.*?:/)[1];
@@ -86,15 +79,9 @@ window.DecodeThis = (function (){
 					else{
 						a = a.split(/:.*?:/)[1];
 					}
-					
 
-
-					// a = "<span class='" + classy + "'>" + content + "</span>";
-					//console.log("Classyyyyy --- " +(classy!= "dummy"));
 					var bbbbb = a.replace("span:high_red","span class='high_red'");
 				}
-
-				//a = a.replace("span:high_red","span class='high_red'");
 
 
 	
@@ -129,9 +116,6 @@ window.DecodeThis = (function (){
 		}
 
 		returnText = returnText.replace(/\n/g,"<br>")
-
-
-
 
 		return returnText;
 		
